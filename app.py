@@ -1,5 +1,29 @@
 import streamlit as st
 import requests
+from agent import run_agent_structured
+
+
+class join:
+    """Format an iterable as a newline-separated bullet list.
+
+    The helper keeps list rendering consistent and safely handles missing or
+    non-string values returned by the AI backend.
+    """
+
+    def __init__(self, values, separator="\n", prefix="- "):
+        self.values = values or []
+        self.separator = separator
+        self.prefix = prefix
+
+    def __str__(self):
+        return self.separator.join(
+            f"{self.prefix}{value}" for value in self.values
+        )
+
+    def __call__(self):
+        return str(self)
+
+
 # -----------------------------
 # Dashboard Styling
 # -----------------------------
@@ -258,16 +282,12 @@ if analyze:
 
         with st.spinner("🤖 AI is analyzing the customer..."):
 
-            response = requests.post(
-                "http://127.0.0.1:8000/analyze",
-                json={"customer": customer},
-                timeout=120
-            )
+            result = run_agent_structured(customer)
 
-        if response.status_code == 200:
-
-            result = response.json()
-
+        if not isinstance(result, dict):
+            st.error("❌ The AI backend returned an invalid response.")
+            st.code(str(result))
+        else:
             st.success("Customer analysis completed successfully!")
 
             # -------------------------------------------------
@@ -275,11 +295,24 @@ if analyze:
             # -------------------------------------------------
 
             st.divider()
-
             st.header("📈 AI Churn Analysis")
 
-            analysis = result.get("analysis", "")
-                    
+            analysis = f"""
+Churn Probability: {result.get("churn_probability", 0) * 100:.2f}%
+Churn Prediction: {result.get("churn_prediction", "N/A")}
+Risk Level: {result.get("risk_level", "N/A")}
+
+Churn Drivers:
+{join(result.get("churn_drivers", []))}
+
+Protective Factors:
+{join(result.get("protective_factors", []))}
+
+Retention Actions:
+{join(result.get("retention_actions", []))}
+"""
+            if not isinstance(analysis, str):
+                analysis = str(analysis)
 
             # ------------------------------
             # KEY METRICS
@@ -289,24 +322,25 @@ if analyze:
             probability_match = re.search(
                 r"Churn Probability:\*?\*?\s*([0-9]+(?:\.[0-9]+)?)%",
                 analysis,
-                re.IGNORECASE
+                re.IGNORECASE,
             )
 
             prediction_match = re.search(
                 r"Churn Prediction:\*?\*?\s*(Churn|No Churn)",
                 analysis,
-                re.IGNORECASE
+                re.IGNORECASE,
             )
 
             risk_match = re.search(
                 r"Risk Level:\*?\*?\s*([A-Za-z]+(?:\s+[A-Za-z]+)*)",
                 analysis,
-                re.IGNORECASE
+                re.IGNORECASE,
             )
 
             probability = probability_match.group(1) if probability_match else "N/A"
             prediction = prediction_match.group(1).strip() if prediction_match else "N/A"
             risk = risk_match.group(1).strip() if risk_match else "N/A"
+
             col1, col2, col3 = st.columns(3)
 
             with col1:
@@ -319,16 +353,7 @@ if analyze:
                 st.metric("Risk Level", risk)
 
             st.divider()
-
             st.markdown(analysis)
-
-        else:
-
-            st.error(
-                f"Backend returned an error: {response.status_code}"
-            )
-
-            st.code(response.text)
 
     except requests.exceptions.ConnectionError:
 
