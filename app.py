@@ -25,82 +25,216 @@ st.set_page_config(
 def format_feature_name(feature, customer_data, direction):
     """
     Convert raw ML/SHAP feature names into
-    human-readable business-friendly explanations.
+    accurate business-friendly explanations
+    using the customer's actual values.
     """
 
-    tenure = customer_data.get("tenure", 0)
-    monthly_charges = customer_data.get("MonthlyCharges", 0)
-    total_charges = customer_data.get("TotalCharges", 0)
+    tenure = float(customer_data.get("tenure", 0))
+    monthly_charges = float(customer_data.get("MonthlyCharges", 0))
+    total_charges = float(customer_data.get("TotalCharges", 0))
 
-    mapping = {
+    contract = str(
+        customer_data.get("Contract", "")
+    ).strip()
 
-        # -------------------------
-        # Customer tenure
-        # -------------------------
+    internet = str(
+        customer_data.get("InternetService", "")
+    ).strip()
 
-        "tenure":
-            f"Short Customer Tenure ({tenure} months)",
+    payment = str(
+        customer_data.get("PaymentMethod", "")
+    ).strip()
 
-        # -------------------------
-        # Contract
-        # -------------------------
+    tech_support = str(
+        customer_data.get("TechSupport", "")
+    ).strip()
 
-        "Contract_Month-to-month":
-            "Month-to-Month Contract",
+    online_security = str(
+        customer_data.get("OnlineSecurity", "")
+    ).strip()
 
-        "Contract_One year":
-            "No One-Year Contract",
+    online_backup = str(
+        customer_data.get("OnlineBackup", "")
+    ).strip()
 
-        "Contract_Two year":
-            "No Two-Year Contract",
+    device_protection = str(
+        customer_data.get("DeviceProtection", "")
+    ).strip()
 
-        # -------------------------
-        # Internet
-        # -------------------------
+    paperless_billing = str(
+        customer_data.get("PaperlessBilling", "")
+    ).strip()
 
-        "InternetService_Fiber optic":
-            "DSL Internet Service",
+    senior_citizen = customer_data.get(
+        "SeniorCitizen", 0
+    )
 
-        # -------------------------
-        # Payment
-        # -------------------------
 
-        "PaymentMethod_Electronic check":
-            "Electronic Check Payment",
+    # -----------------------------------------------------
+    # TENURE
+    # -----------------------------------------------------
 
-        # -------------------------
-        # Support / Security
-        # -------------------------
+    if feature == "tenure":
 
-        "TechSupport_No":
-            "No Technical Support",
+        if tenure <= 6:
+            return f"Short Customer Tenure ({int(tenure)} months)"
 
-        "OnlineSecurity_No":
-            "No Online Security",
+        elif tenure >= 36:
+            return f"Long Customer Tenure ({int(tenure)} months)"
 
-        "OnlineBackup_No":
-            "No Online Backup",
+        else:
+            return f"Customer Tenure ({int(tenure)} months)"
 
-        "DeviceProtection_No":
-            "No Device Protection",
 
-        # -------------------------
-        # Billing
-        # -------------------------
+    # -----------------------------------------------------
+    # CONTRACT
+    # -----------------------------------------------------
 
-        "MonthlyCharges":
-            f"Monthly Charges (${monthly_charges:.2f})",
+    if feature == "Contract_Month-to-month":
 
-        "TotalCharges":
-            f"Total Charges (${total_charges:.2f})",
-    }
+        if contract == "Month-to-month":
+            return "Month-to-Month Contract"
 
-    # If the feature is known, use our business-friendly name
-    if feature in mapping:
-        return mapping[feature]
+        return "Not on Month-to-Month Contract"
 
-    # Otherwise make the raw feature name readable
-    return str(feature).replace("_", " ").title()
+
+    if feature == "Contract_One year":
+
+        if contract == "One year":
+            return "One-Year Contract"
+
+        return "Not on One-Year Contract"
+
+
+    if feature == "Contract_Two year":
+
+        if contract == "Two year":
+            return "Two-Year Contract"
+
+        return "Not on Two-Year Contract"
+
+
+    # -----------------------------------------------------
+    # INTERNET SERVICE
+    # -----------------------------------------------------
+
+    if feature == "InternetService_Fiber optic":
+
+        if internet == "Fiber optic":
+            return "Fiber Optic Internet Service"
+
+        elif internet == "DSL":
+            return "DSL Internet Service"
+
+        return "No Internet Service"
+
+
+    # -----------------------------------------------------
+    # PAYMENT METHOD
+    # -----------------------------------------------------
+
+    if feature == "PaymentMethod_Electronic check":
+
+        if payment == "Electronic check":
+            return "Electronic Check Payment"
+
+        return f"{payment} Payment"
+
+
+    # -----------------------------------------------------
+    # TECH SUPPORT
+    # -----------------------------------------------------
+
+    if feature == "TechSupport_No":
+
+        if tech_support == "No":
+            return "No Technical Support"
+
+        return "Technical Support Available"
+
+
+    # -----------------------------------------------------
+    # ONLINE SECURITY
+    # -----------------------------------------------------
+
+    if feature == "OnlineSecurity_No":
+
+        if online_security == "No":
+            return "No Online Security"
+
+        return "Online Security Enabled"
+
+
+    # -----------------------------------------------------
+    # ONLINE BACKUP
+    # -----------------------------------------------------
+
+    if feature == "OnlineBackup_No":
+
+        if online_backup == "No":
+            return "No Online Backup"
+
+        return "Online Backup Enabled"
+
+
+    # -----------------------------------------------------
+    # DEVICE PROTECTION
+    # -----------------------------------------------------
+
+    if feature == "DeviceProtection_No":
+
+        if device_protection == "No":
+            return "No Device Protection"
+
+        return "Device Protection Enabled"
+
+
+    # -----------------------------------------------------
+    # PAPERLESS BILLING
+    # -----------------------------------------------------
+
+    if feature == "PaperlessBilling":
+
+        if paperless_billing == "Yes":
+            return "Paperless Billing Enabled"
+
+        return "Paperless Billing Disabled"
+
+
+    # -----------------------------------------------------
+    # SENIOR CITIZEN
+    # -----------------------------------------------------
+
+    if feature == "SeniorCitizen":
+
+        if senior_citizen in [1, "1", True, "Yes", "yes"]:
+            return "Senior Citizen"
+
+        return "Non-Senior Customer"
+
+
+    # -----------------------------------------------------
+    # BILLING
+    # -----------------------------------------------------
+
+    if feature == "MonthlyCharges":
+
+        return f"Monthly Charges (${monthly_charges:.2f})"
+
+
+    if feature == "TotalCharges":
+
+        return f"Total Charges (${total_charges:.2f})"
+
+
+    # -----------------------------------------------------
+    # DEFAULT
+    # -----------------------------------------------------
+
+    return str(feature).replace(
+        "_",
+        " "
+    ).title()
 
 
 # =========================================================
