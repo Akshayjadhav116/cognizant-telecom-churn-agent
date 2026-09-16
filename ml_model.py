@@ -780,11 +780,13 @@ def create_confusion_matrix(
     plt.tight_layout()
 
     plt.savefig(
-        "confusion_matrix_final.png",
-        dpi=150
-    )
+    "confusion_matrix_final.png",
+    dpi=150
+)
 
-    plt.close()
+plt.show()
+
+plt.close()
 
 
 
